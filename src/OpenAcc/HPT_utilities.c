@@ -755,12 +755,16 @@ void manage_replica_swaps(
 
       if(swap_order<=0.5){ 
 //        MPI_PRINTF0("Swap order: 0->N_r-1\n"); //
-        rep_lab1=hpt_params->label[i_counter];
-        rep_lab2=hpt_params->label[i_counter+1];
-      }else{
+        /* rep_lab1=hpt_params->label[i_counter]; */
+        /* rep_lab2=hpt_params->label[i_counter+1]; */
+				rep_lab1=i_counter;
+				rep_lab2=i_counter+1;
+			}else{
 //        MPI_PRINTF0("Swap order: N_r-1->0\n");
-        rep_lab1=hpt_params->label[replicas_number-i_counter-1];
-        rep_lab2=hpt_params->label[replicas_number-i_counter-2];
+        /* rep_lab1=hpt_params->label[replicas_number-i_counter-1]; */
+        /* rep_lab2=hpt_params->label[replicas_number-i_counter-2]; */
+				rep_lab1=replicas_number-i_counter-1;
+				rep_lab2=replicas_number-i_counter-2;
       }
 
 //        if(verbosity_lv>4) printf("proposing swap %d %d\n",i_counter,i_counter+1);      
@@ -776,14 +780,16 @@ void manage_replica_swaps(
         // set defect as next
         MPI_PRINTF1("replica lab: %d gets coefficient %lf\n",rep_lab1,hpt_params->cr_vec[rep_lab2]);
         init_k(tconf_acc,hpt_params->cr_vec[rep_lab2],hpt_params->defect_boundary,hpt_params->defect_coordinates,&def,1);
+        #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
       }
       if(rep_lab2==hpt_params->label[devinfo.replica_idx]){
         // set defect as prev
         MPI_PRINTF1("replica lab: %d gets coefficient %lf\n",rep_lab2,hpt_params->cr_vec[rep_lab1]);
         init_k(tconf_acc,hpt_params->cr_vec[rep_lab1],hpt_params->defect_boundary,hpt_params->defect_coordinates,&def,1);
+        #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
       }
       //TODO: possibly optimize by updating only defect info
-      #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
+			
 
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -833,8 +839,7 @@ void manage_replica_swaps(
         }
       }
 
-			if(accepted)
-				MPI_Bcast((void*)&(hpt_params->label[0]),NREPLICAS,MPI_INT,0,MPI_COMM_WORLD);
+			MPI_Bcast((void*)&(hpt_params->label[0]),NREPLICAS,MPI_INT,0,MPI_COMM_WORLD);
 			
       MPI_Bcast((void*)&accepted,1,MPI_INT,0,MPI_COMM_WORLD); // each replica must know if pairs are swapped
 
@@ -843,13 +848,14 @@ void manage_replica_swaps(
       if(!accepted && rep_lab1==hpt_params->label[devinfo.replica_idx]){
         // set defect as next
         init_k(tconf_acc,hpt_params->cr_vec[rep_lab1],hpt_params->defect_boundary,hpt_params->defect_coordinates,&def,1);
+        #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
       }
       if(!accepted && rep_lab2==hpt_params->label[devinfo.replica_idx]){
         // set defect as prev
         init_k(tconf_acc,hpt_params->cr_vec[rep_lab2],hpt_params->defect_boundary,hpt_params->defect_coordinates,&def,1);
+        #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
       }
       //TODO: possibly optimize by updating only defect info
-      #pragma acc update device(tconf_acc[0:alloc_info.conf_acc_size])
 
 //      //XXX: debug!
 //      for(int idx=0; idx<rep->replicas_total_number; ++idx){

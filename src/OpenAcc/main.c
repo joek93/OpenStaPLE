@@ -653,18 +653,15 @@ int main(int argc, char* argv[]){
 						if(rep->replicas_total_number>1){
 							// conf swap
 							if (0==devinfo.myrank_world) {printf("CONF SWAP PROPOSED\n");}
-              #pragma acc update self(conf_acc[0:alloc_info.conf_acc_size])
               manage_replica_swaps(conf_acc, aux_conf_acc, local_sums, &def, &swap_number,all_swap_vector,acceptance_vector,rep);
 
 							if (0==devinfo.myrank_world) {printf("Number of accepted swaps: %d\n", swap_number);}       
-							#pragma acc update host(conf_acc[0:8])
                 
 							// periodic conf translation
               if(lab==0){
                 trasl_conf(conf_acc,auxbis_conf_acc);
               }
 						}
-						#pragma acc update host(conf_acc[0:8])
 #endif
 					}
 
@@ -717,7 +714,7 @@ int main(int argc, char* argv[]){
         
 					}
 #endif
-          
+					
 					// gauge stuff measures
           if(0==rep->label[devinfo.replica_idx]){
             printf("===========GAUGE MEASURING============\n");
@@ -802,7 +799,6 @@ int main(int argc, char* argv[]){
                   printf("Plaquette = %.18lf    ", plq/GL_SIZE/6.0/3.0);
                   printf("Rectangle = %.18lf\n",rect/GL_SIZE/6.0/3.0/2.0);
                 }else printf("Metro_iter %d   Plaquette= %.18lf    Rectangle = %.18lf\n",conf_id_iter,plq/GL_SIZE/6.0/3.0,rect/GL_SIZE/6.0/3.0/2.0);
-
                 fprintf(goutfile,"%d\t%d\t",conf_id_iter,
                         accettate_therm[rep->label[0]]+accettate_metro[rep->label[0]]
                         -accettate_therm_old[rep->label[0]]-accettate_metro_old[rep->label[0]]);
