@@ -653,7 +653,7 @@ int main(int argc, char* argv[]){
 						if(rep->replicas_total_number>1){
 							// conf swap
 							if (0==devinfo.myrank_world) {printf("CONF SWAP PROPOSED\n");}
-              #pragma acc update host(conf_acc[0:alloc_info.conf_acc_size])
+              #pragma acc update self(conf_acc[0:alloc_info.conf_acc_size])
               manage_replica_swaps(conf_acc, aux_conf_acc, local_sums, &def, &swap_number,all_swap_vector,acceptance_vector,rep);
 
 							if (0==devinfo.myrank_world) {printf("Number of accepted swaps: %d\n", swap_number);}       

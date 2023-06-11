@@ -329,9 +329,9 @@ void printing_k_mu(su3_soa * conf){
 void label_print(rep_info * hpt_params, FILE *file, int step_number){
 
   int i;
-  fprintf(file,"%d    ",step_number);    
+  fprintf(file,"%d",step_number);    
   for(i=0;i<hpt_params->replicas_total_number;i++){
-    fprintf(file,"%d    ", hpt_params->label[i]);
+    fprintf(file,"\t%d", hpt_params->label[i]);
   }
   fprintf(file,"\n");
 }
@@ -833,7 +833,9 @@ void manage_replica_swaps(
         }
       }
 
-      MPI_Bcast((void*)&(hpt_params->label[0]),NREPLICAS,MPI_INT,0,MPI_COMM_WORLD);
+			if(accepted)
+				MPI_Bcast((void*)&(hpt_params->label[0]),NREPLICAS,MPI_INT,0,MPI_COMM_WORLD);
+			
       MPI_Bcast((void*)&accepted,1,MPI_INT,0,MPI_COMM_WORLD); // each replica must know if pairs are swapped
 
       // if swap not accepted, the involved replicas must update their defect information 
@@ -894,7 +896,7 @@ void trasl_conf( __restrict const su3_soa *  const tconf_acc,
   int dir=0;
     
   if(0==devinfo.myrank){dir0=casuale();}
-#ifdef MULTIDEVICE
+#if NRANKS_D3 > 1 // #ifdef MULTIDEVICE
   MPI_Bcast((void*) &dir0,1,MPI_DOUBLE,0,devinfo.mpi_comm);
   if(verbosity_lv>4)
     printf("MPI%02d dir0 : %f \n",devinfo.myrank,dir0);

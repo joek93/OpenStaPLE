@@ -666,7 +666,7 @@ int read_device_setting(dev_info * di,char filelines[MAXLINES][MAXLINELENGTH], i
 	const int async_comm_gauge_def   = 0;
 
 	int helpmode = (int) (startline == endline);
-#ifndef MULTIDEVICE        
+#ifndef MULTIDEVICE 
 	const int ignored_def = 1; // ignored, actually, but necessary
 #endif
     
@@ -677,7 +677,11 @@ int read_device_setting(dev_info * di,char filelines[MAXLINES][MAXLINELENGTH], i
 									(par_info){(void*) &(di->single_dev_choice),TYPE_INT,"device_choice",    NULL,                                 NULL},
 									(par_info){(void*) IGNORE_IT,               TYPE_INT,"AsyncFermionComms",(const void*) &async_comm_fermion_def,NULL},
 									(par_info){(void*) IGNORE_IT,               TYPE_INT,"AsyncGaugeComms",  (const void*) &async_comm_gauge_def,  NULL},
+#ifndef MULTIDEVICE 
 									(par_info){(void*) IGNORE_IT,               TYPE_INT,"NProcPerNode",     (const void*) &ignored_def,           NULL},
+#else
+									(par_info){(void*) &(di->proc_per_node),     TYPE_INT,"NProcPerNode",     NULL, NULL},
+#endif
 #else
 									(par_info){(void*) &(di->single_dev_choice), TYPE_INT,"device_choice",    (const void*) &single_dev_choice_def, NULL},
 									(par_info){(void*) &(di->async_comm_fermion),TYPE_INT,"AsyncFermionComms",(const void*) &async_comm_fermion_def,NULL},
