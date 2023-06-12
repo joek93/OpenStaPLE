@@ -657,13 +657,13 @@ int main(int argc, char* argv[]){
 
 							if (0==devinfo.myrank_world) {printf("Number of accepted swaps: %d\n", swap_number);}       
 							
-							// TODO: lab=rep->label[devinfo.replica_idx]
-              /* if(lab==0){ */
-              /*   trasl_conf(conf_acc,auxbis_conf_acc); */
-              /* } */
+							lab=rep->label[devinfo.replica_idx];
+              if(lab==0){
+                trasl_conf(conf_acc,auxbis_conf_acc);
+              }
 						}
 #endif
-					}
+				 }
 
 					id_iter++;
 					conf_id_iter++;
