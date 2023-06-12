@@ -656,11 +656,11 @@ int main(int argc, char* argv[]){
               manage_replica_swaps(conf_acc, aux_conf_acc, local_sums, &def, &swap_number,all_swap_vector,acceptance_vector,rep);
 
 							if (0==devinfo.myrank_world) {printf("Number of accepted swaps: %d\n", swap_number);}       
-                
-							// periodic conf translation
-              if(lab==0){
-                trasl_conf(conf_acc,auxbis_conf_acc);
-              }
+							
+							// TODO: lab=rep->label[devinfo.replica_idx]
+              /* if(lab==0){ */
+              /*   trasl_conf(conf_acc,auxbis_conf_acc); */
+              /* } */
 						}
 #endif
 					}
