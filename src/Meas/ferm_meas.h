@@ -34,7 +34,6 @@ void eo_inversion(inverter_package ip,
 		  vec3_soa * phi_e,    // parking variable
 		  vec3_soa * phi_o);   // parking variable
 
-
 void fermion_measures(su3_soa * tconf_acc,
 			      ferm_param * tfermions_parameters, 
                   ferm_meas_params * tfm_par,

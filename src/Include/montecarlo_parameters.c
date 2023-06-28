@@ -24,11 +24,13 @@ void init_global_program_status(){
 
 	FILE * gps_file = fopen(mc_params.statusFileName, "r");  
 	if(gps_file){
-		int reads = fscanf(gps_file,"%d %f %f %d",
+		int reads = fscanf(gps_file,"%d %f %f %f %d %d",
 											 &(mc_params.next_gps),
 											 &(mc_params.max_flavour_cycle_time),
+											 &(mc_params.max_spectral_time),
 											 &(mc_params.max_update_time),
-											 &(mc_params.measures_done));
+											 &(mc_params.measures_done),
+											 &(mc_params.measures_done_spectr));
 		if (reads != 4 ){
 			if(0 == devinfo.myrank)
 				printf("ERROR: %s:%d: montecarlo status file %s not readable\n",
@@ -37,28 +39,30 @@ void init_global_program_status(){
 		}
 
 		fclose(gps_file);
-	}
-	else 
-    {
+	} else {
 			MPI_PRINTF1("file %s not readable\n", mc_params.statusFileName);
 
 			mc_params.next_gps  = GPSTATUS_UPDATE;
 			mc_params.max_flavour_cycle_time = 1.0f;
+			mc_params.max_spectral_time = 1.0f;
 			mc_params.max_update_time = 1.0f;
-			mc_params.measures_done = 0 ;
+			mc_params.measures_done = 0;
+			mc_params.measures_done_spectr = 0;
     }
 
 	mc_params.run_condition = RUN_CONDITION_GO; 
 	printf("run_condition %d ",mc_params.run_condition);
 
-	printf("%d %f %f %d\n",
+	printf("%d %f %f %f %d %d\n",
 				 mc_params.next_gps,
 				 mc_params.max_flavour_cycle_time,
+				 mc_params.max_spectral_time,
 				 mc_params.max_update_time,
-				 mc_params.measures_done);
+				 mc_params.measures_done,
+				 mc_params.measures_done_spectr);
 
-	printf("#mc_params.next_gps,mc_params.max_flavour_cycle_time,\n\
-#mc_params.max_update_time,mc_params.measures_done\n");
+	printf("#mc_params.next_gps,mc_params.max_flavour_cycle_time,mc_params.max_spectral_time,\n\
+#mc_params.max_update_time,mc_params.measures_done,mc_params.measures_done_spectr\n");
 
 
 }
@@ -66,25 +70,29 @@ void init_global_program_status(){
 void save_global_program_status(mc_params_t mcp){
 
 	printf("Saving global program status...\n");
-	printf("%d %f %f %d\n",
+	printf("%d %f %f %f %d %d\n",
 				 mcp.next_gps,
 				 mcp.max_flavour_cycle_time,
+				 mcp.max_spectral_time,
 				 mcp.max_update_time,
-				 mcp.measures_done);
+				 mcp.measures_done,
+				 mcp.measures_done_spectr);
 
-	printf("#mc_params.next_gps,mc_params.max_flavour_cycle_time,\n\
-#mc_params.max_update_time,mc_params.measures_done\n");
+	printf("#mc_params.next_gps,mc_params.max_flavour_cycle_time,mc_params.max_spectral_time,\n\
+#mc_params.max_update_time,mc_params.measures_done,mc_params.measures_done_spectr\n");
 
 
 	FILE * gps_file = fopen(mc_params.statusFileName, "w");  
-	fprintf(gps_file,"%d %f %f %d\n",
+	fprintf(gps_file,"%d %f %f %f %d %d\n",
 					mcp.next_gps,
 					mcp.max_flavour_cycle_time,
+					mcp.max_spectral_time,
 					mcp.max_update_time,
-					mcp.measures_done);
+					mcp.measures_done,
+					mcp.measures_done_spectr);
 
-	fprintf(gps_file,"#mc_params.next_gps,mc_params.max_flavour_cycle_time,\n\
-#mc_params.max_update_time,mc_params.measures_done\n");
+	fprintf(gps_file,"#mc_params.next_gps,mc_params.max_flavour_cycle_time,mc_params.max_spectral_time,\n\
+#mc_params.max_update_time,mc_params.measures_done,mc_params.measures_done_spectr\n");
 
 	fclose(gps_file);
 

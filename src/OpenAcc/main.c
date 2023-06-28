@@ -27,6 +27,7 @@
 #include "../Include/rep_info.h"
 #include "../Include/acceptances_info.h"
 #include "../Meas/ferm_meas.h"
+#include "../Meas/spectral_meas.h"
 #include "../Meas/gauge_meas.h"
 #include "../Meas/polyakov.h"
 #include "../Meas/measure_topo.h"
@@ -514,7 +515,7 @@ int main(int argc, char* argv[]){
 
     // gauge stuff measures
 #ifdef PAR_TEMP
-    if(devinfo.replica_idx==rep->label[0])
+    if(0==rep->label[devinfo.replica_idx])
 #endif
     {
       printf("Gauge Measures:\n");
@@ -530,22 +531,19 @@ int main(int argc, char* argv[]){
       printf("Plaquette     : %.18lf\n" ,plq/GL_SIZE/3.0/6.0);
       printf("Rectangle     : %.18lf\n" ,rect/GL_SIZE/3.0/6.0/2.0);
       printf("Polyakov Loop : (%.18lf,%.18lf) \n",creal(poly),cimag(poly));
-    }
 
-    // fermionic stuff measures
-#ifdef PAR_TEMP
-    if(devinfo.replica_idx==rep->label[0])
-#endif
-    {
-      printf("Fermion Measurements: see file %s\n",
-																		fm_par.fermionic_outfilename);
+      // fermionic stuff measures
+      printf("Fermion Measurements: see file %s\n", fm_par.fermionic_outfilename);
       fermion_measures(conf_acc,fermions_parameters,
                        &fm_par, md_parameters.residue_metro, 
                        md_parameters.max_cg_iterations, id_iter_offset,
                        plq/GL_SIZE/3.0/6.0,
                        rect/GL_SIZE/3.0/6.0/2.0);   
-    }
 
+      // spectral stuff measures
+      printf("Spectral Measurements: see file %s\n", spm_par.spmeas_outfilename);
+      spectral_measures(conf_acc,&spm_par,conf_id_iter);
+    }
   }else MPI_PRINTF0("Starting generation of Configurations.\n");
      
   // thermalization & metropolis updates
@@ -999,10 +997,7 @@ int main(int argc, char* argv[]){
   
         }
 
-
         if (GPSTATUS_FERMION_MEASURES == mc_params.next_gps){
-    
-            
 					// fermionic stuff measures
             
 					if(0 != mc_params.JarzynskiMode ){ // halfway measurements for Jarzynski
@@ -1040,7 +1035,7 @@ int main(int argc, char* argv[]){
 						mc_params.next_gps = GPSTATUS_FERMION_MEASURES;
 
 #ifdef PAR_TEMP
-          if(devinfo.replica_idx==rep->label[0])
+          if(0==rep->label[devinfo.replica_idx])
 #endif
           {
             struct timeval tf0, tf1;
@@ -1054,15 +1049,19 @@ int main(int argc, char* argv[]){
             gettimeofday(&tf1, NULL);
 
             double fermionMeasureTiming =
-              (double) (tf1.tv_sec - tf0.tv_sec)+
+              (double)(tf1.tv_sec - tf0.tv_sec)+
               (double)(tf1.tv_usec - tf0.tv_usec)/1.0e6;
+
+
+
 
             if(debug_settings.save_diagnostics == 1){
               FILE *foutfile = 
                 fopen(debug_settings.diagnostics_filename,"at");
 
-              if(conf_id_iter % fm_par.measEvery == 0 )
+              if(conf_id_iter % fm_par.measEvery == 0 ){
                 fprintf(foutfile,"FERMMEASTIME  %f \n",fermionMeasureTiming);
+              }
               fclose(foutfile);
             }
           }
@@ -1085,14 +1084,54 @@ int main(int argc, char* argv[]){
 						}
 						else MPI_PRINTF0("WARNING, \'SaveAllAtEnd\'=0,NOT SAVING/OVERWRITING RNG STATUS.\n\n\n");
 					}
-
         }
+
+        if (GPSTATUS_SPECTRAL_MEASURES == mc_params.next_gps){
+					// spectral stuff measures
+            
+					if(conf_id_iter % spm_par.measEvery == 0 )
+						mc_params.next_gps = GPSTATUS_SPECTRAL_MEASURES;
+
+#ifdef PAR_TEMP
+          if(0==rep->label[devinfo.replica_idx])
+#endif
+          {
+            struct timeval tf0, tf1;
+            gettimeofday(&tf0, NULL);
+            spectral_measures(conf_acc,&spm_par,conf_id_iter);
+            gettimeofday(&tf1, NULL);
+
+            double spectralMeasureTiming =
+              (double)(tf1.tv_sec - tf0.tv_sec)+
+              (double)(tf1.tv_usec - tf0.tv_usec)/1.0e6;
+
+            if(debug_settings.save_diagnostics == 1){
+              FILE *foutfile = 
+                fopen(debug_settings.diagnostics_filename,"at");
+
+              if(conf_id_iter % spm_par.measEvery == 0 ){
+                fprintf(foutfile,"SPECTRMEASTIME  %f \n",spectralMeasureTiming);
+              }
+              fclose(foutfile);
+            }
+          }
+        }
+
         // determining next thing to do
         if(0 == conf_id_iter % fm_par.measEvery)
 					mc_params.next_gps = GPSTATUS_FERMION_MEASURES;
-        if(mc_params.measures_done == fm_par.SingleInvNVectors){
-					mc_params.next_gps = GPSTATUS_UPDATE;
-					mc_params.measures_done = 0;
+
+        if(mc_params.measures_done == fm_par.SingleInvNVectors){ // all fermion measures done
+          // check spectral measures
+          if(0 == conf_id_iter % spm_par.measEvery)
+            mc_params.next_gps = GPSTATUS_SPECTRAL_MEASURES;
+
+
+          if(mc_params.measures_done_spectr == 1){ // all spectral measures done
+            mc_params.next_gps = GPSTATUS_UPDATE;
+            mc_params.measures_done = 0;
+            mc_params.measures_done_spectr = 0;
+          }
         }
 
         // determining run condition
@@ -1125,6 +1164,12 @@ int main(int argc, char* argv[]){
 							total_duration + 2*mc_params.max_flavour_cycle_time;
 						printf("Next step, flavour measure cycle : %ds\n",
 									 (int) mc_params.max_flavour_cycle_time);
+					}
+					if(GPSTATUS_SPECTRAL_MEASURES == mc_params.next_gps){
+						max_expected_duration_with_another_cycle = 
+							total_duration + 1*mc_params.max_spectral_time;
+						printf("Next step, flavour measure cycle : %ds\n",
+									 (int) mc_params.max_spectral_time);
 					}
 
 					if(max_expected_duration_with_another_cycle > mc_params.MaxRunTimeS){

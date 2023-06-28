@@ -76,6 +76,8 @@ __common_sources = \
 	Meas/baryon_number_utilities.h \
 	Meas/ferm_meas.c \
 	Meas/ferm_meas.h \
+	Meas/spectral_meas.c \
+	Meas/spectral_meas.h \
 	Meas/gauge_meas.c \
 	Meas/gauge_meas.h \
 	Meas/magnetic_susceptibility_utilities.c \

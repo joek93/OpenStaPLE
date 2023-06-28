@@ -7,6 +7,8 @@
 #include "../Include/fermion_parameters.h"
 #include "../Meas/ferm_meas.c"
 #include "../Meas/ferm_meas.h"
+#include "../Meas/spectral_meas.c"
+#include "../Meas/spectral_meas.h"
 #include "../Meas/gauge_meas.c"
 #include "../Meas/gauge_meas.h"
 #include "../OpenAcc/alloc_vars.c"

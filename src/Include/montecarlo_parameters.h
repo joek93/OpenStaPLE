@@ -10,6 +10,7 @@
 #define RUN_CONDITION_TERMINATE 0
 #define RUN_CONDITION_GO 1
 #define GPSTATUS_FERMION_MEASURES 2
+#define GPSTATUS_SPECTRAL_MEASURES 2
 
 typedef struct MC_PARAM_T{
 	int ntraj;
@@ -30,8 +31,10 @@ typedef struct MC_PARAM_T{
 	int next_gps; //next_global_program_status
 	struct timeval start_time;
 	float max_flavour_cycle_time;
+	float max_spectral_time;
 	float max_update_time;
 	int measures_done;
+	int measures_done_spectr;
 
 	int run_condition;
 

@@ -2,6 +2,7 @@
 #define _SETTING_FILE_PARSER_C_
 
 #include "../Meas/ferm_meas.h"
+#include "../Meas/spectral_meas.h"
 #include "../Meas/gauge_meas.h"
 #include "../Meas/measure_topo.h"
 #include "../Mpi/multidev.h"
@@ -63,14 +64,15 @@ const char * par_macro_groups_names[] ={ // npmtypes strings, no spaces!
 																				"MontecarloParameters",        // 4       
 																				"GaugeMeasuresSettings",       // 5
 																				"FermionMeasuresSettings",     // 6
-																				"TopoMeasuresSettings"   ,     // 7
-																				"DeviceSettings"         ,     // 8
-																				"Geometry"               ,     // 9
-																				"DebugSettings"          ,     // 10
-																				"InverterTricks"         ,     // 11
-																				"TestSettings"           ,     // 12
-																				"ReplicasNumbers"       ,      // 13
-																				"AcceptancesMeasuresSettings"  // 14
+																				"SpectralMeasuresSettings",    // 7
+																				"TopoMeasuresSettings"   ,     // 8
+																				"DeviceSettings"         ,     // 9
+																				"Geometry"               ,     // 10
+																				"DebugSettings"          ,     // 11
+																				"InverterTricks"         ,     // 12
+																				"TestSettings"           ,     // 13
+																				"ReplicasNumbers"       ,      // 14
+																				"AcceptancesMeasuresSettings"  // 15
 };
 enum pmg_types {
 								PMG_ACTION         ,
@@ -80,6 +82,7 @@ enum pmg_types {
 								PMG_MC             ,
 								PMG_GMEAS          ,
 								PMG_FMEAS          ,
+								PMG_SPMEAS         ,
 								PMG_TMEAS	         ,
 								PMG_DEVICE         ,
 								PMG_GEOMETRY       ,
@@ -656,6 +659,19 @@ int read_topomeas_info(meastopo_param * meastopars,char filelines[MAXLINES][MAXL
 	return scan_group_NV(sizeof(tomp)/sizeof(par_info),tomp, filelines, startline, endline);
 }
 
+int read_spectrmeas_info(spectr_meas_params * spmeaspars,char filelines[MAXLINES][MAXLINELENGTH], int startline, int endline)
+{
+	const int measEvery_def = 1;
+	const char measEvery_comment[] = "#Spectral measurements will be performed once very MeasEvery times.";
+
+	par_info spmp[]={
+									(par_info){(void*) &(spmeaspars->spmeas_outfilename),       TYPE_STR,"SpectralOutfilename",        NULL ,                       NULL},
+									(par_info){(void*) &(spmeaspars->measEvery),                   TYPE_INT,"MeasEvery"           ,(const void*) &measEvery_def,measEvery_comment},
+	};
+
+	return scan_group_NV(sizeof(spmp)/sizeof(par_info),spmp, filelines, startline, endline);
+}
+
 int read_device_setting(dev_info * di,char filelines[MAXLINES][MAXLINELENGTH], int startline, int endline)
 {
 	// notice that pre_init_multidev1D or any relevant function
@@ -1051,6 +1067,10 @@ int set_global_vars_and_fermions_from_input_file(const char* input_filename)
 			break; 
 		case PMG_FMEAS     : 
 			check = read_fermmeas_info(&fm_par,
+																 filelines,startline,endline);
+			break; 
+		case PMG_SPMEAS     : 
+			check = read_spectrmeas_info(&spm_par,
 																 filelines,startline,endline);
 			break; 
 		case PMG_TMEAS     : 

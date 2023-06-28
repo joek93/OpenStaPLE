@@ -243,7 +243,7 @@ void fermion_measures(su3_soa * tconf_acc,
                 RUN_CONDITION_TERMINATE != mc_params.run_condition ) {
             FILE *foutfile;
 
-            if(devinfo.myrank == 0 ){
+            if(devinfo.myrank_world == 0 ){
                 foutfile = fopen(tfm_par->fermionic_outfilename,"at");
                 if(fsize == 0){
                     set_fermion_file_header(tfm_par, tfermions_parameters);
