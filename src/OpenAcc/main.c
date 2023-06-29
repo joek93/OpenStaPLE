@@ -339,7 +339,6 @@ int main(int argc, char* argv[]){
 
 
 #ifdef PAR_TEMP
-
     if(conf_id_iter==0){
       // first label initialization
       for(int ri=0; ri<rep->replicas_total_number; ++ri)
@@ -513,11 +512,11 @@ int main(int argc, char* argv[]){
     printf("\tMEASUREMENTS ONLY ON FILE %s\n", mc_params.save_conf_name);
     printf("\n#################################################\n");
 
-    // gauge stuff measures
 #ifdef PAR_TEMP
     if(0==rep->label[devinfo.replica_idx])
 #endif
     {
+      // gauge stuff measures
       printf("Gauge Measures:\n");
       plq = calc_plaquette_soloopenacc(conf_acc,aux_conf_acc,local_sums);
 
@@ -640,9 +639,9 @@ int main(int argc, char* argv[]){
 					// replicas update - hpt step
          {
 #ifdef PAR_TEMP
-            int r=devinfo.replica_idx;
-            int lab=rep->label[r];
-						printf("REPLICA %d (index %d):\n",lab,r);
+            int replica_idx=devinfo.replica_idx;
+            int lab=rep->label[replica_idx];
+						printf("REPLICA %d (index %d):\n",lab,replica_idx);
 #endif
 
 						// initial action
@@ -655,7 +654,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PAR_TEMP
-							printf("ACTION BEFORE HMC STEP REPLICA %d (idx %d): %.15lg\n", lab, r, action);
+							printf("ACTION BEFORE HMC STEP REPLICA %d (idx %d): %.15lg\n", lab, replica_idx, action);
 #else
 							printf("ACTION BEFORE HMC STEP: %.15lg\n", action);
 #endif
@@ -739,7 +738,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PAR_TEMP
-							printf("ACTION AFTER HMC STEP REPLICA %d (idx %d): %.15lg\n", lab, r, action);
+							printf("ACTION AFTER HMC STEP REPLICA %d (idx %d): %.15lg\n", lab, devinfo.replica_idx, action);
 #else
 							printf("ACTION AFTER HMC STEP: %.15lg\n", action);
 #endif
@@ -1219,17 +1218,15 @@ int main(int argc, char* argv[]){
     
   // saving gauge conf and RNG status to file
   {
-    int r=devinfo.replica_idx;
 #ifdef PAR_TEMP
-    int lab=rep->label[r];
+    int lab=rep->label[devinfo.replica_idx];
     snprintf(rep_str,20,"replica_%d",lab); // initialize rep_str
     strcat(mc_params.save_conf_name,rep_str); // append rep_str
 #endif
 		
     if (debug_settings.SaveAllAtEnd){
       MPI_PRINTF1("Saving conf %s.\n", mc_params.save_conf_name);
-      save_conf_wrapper(conf_acc,mc_params.save_conf_name, conf_id_iter,
-												debug_settings.use_ildg);
+      save_conf_wrapper(conf_acc,mc_params.save_conf_name, conf_id_iter, debug_settings.use_ildg);
     }else MPI_PRINTF0("WARNING, \'SaveAllAtEnd\'=0,NOT SAVING/OVERWRITING CONF AND RNG STATUS.\n\n\n");
 #ifdef PAR_TEMP
     strcpy(mc_params.save_conf_name,aux_name_file);
